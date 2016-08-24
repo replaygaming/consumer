@@ -38,7 +38,7 @@ var defaultProjectId = "emulator-project-id"
 
 func newPubSubClient() (*pubsub.Client, error) {
 	ctx := context.Background()
-	projectId := os.Getenv("ES_PUBSUB_PROJECT_ID")
+	projectId := os.Getenv("PUBSUB_PROJECT_ID")
 	if projectId == "" {
 		projectId = defaultProjectId
 	}
@@ -46,7 +46,7 @@ func newPubSubClient() (*pubsub.Client, error) {
 	var err error
 
 	// Create a new client with token
-	keyfilePath := os.Getenv("ES_PUBSUB_KEYFILE")
+	keyfilePath := os.Getenv("PUBSUB_KEYFILE")
 	if keyfilePath != "" {
 		jsonKey, err := ioutil.ReadFile(keyfilePath)
 		if err != nil {
