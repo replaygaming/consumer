@@ -1,8 +1,8 @@
 package consumer
 
 import (
+	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
-	"google.golang.org/cloud/pubsub"
 	"reflect"
 	"testing"
 	"time"

@@ -1,10 +1,11 @@
 package consumer
 
 import (
+	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/cloud"
-	"google.golang.org/cloud/pubsub"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 	"io/ioutil"
 	"log"
 	"os"
@@ -62,7 +63,7 @@ func newPubSubClient() (*pubsub.Client, error) {
 			return nil, err
 		}
 		tokenSource := conf.TokenSource(ctx)
-		client, err = pubsub.NewClient(ctx, projectId, cloud.WithTokenSource(tokenSource))
+		client, err = pubsub.NewClient(ctx, projectId, option.WithTokenSource(tokenSource))
 	} else {
 		// Create client without token
 		client, err = pubsub.NewClient(ctx, projectId)
@@ -91,7 +92,7 @@ func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 	topicExists, _ := topic.Exists(context.Background())
 
 	if !topicExists {
-		new_topic, err := pubsubClient.NewTopic(context.Background(), topicName)
+		new_topic, err := pubsubClient.CreateTopic(context.Background(), topicName)
 		if err != nil {
 			log.Fatalf("Could not create PubSub topic: %v", err)
 		}
@@ -108,7 +109,7 @@ func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscr
 	subscriptionExists, _ := subscription.Exists(context.Background())
 
 	if !subscriptionExists {
-		new_subscription, err := pubsubClient.NewSubscription(context.Background(), subscriptionName, topic, 0, nil)
+		new_subscription, err := pubsubClient.CreateSubscription(context.Background(), subscriptionName, topic, 0, nil)
 		if err != nil {
 			log.Fatalf("Could not create PubSub subscription: %v", err)
 		}
@@ -132,7 +133,7 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 
 		for {
 			msg, err := it.Next()
-			if err == pubsub.Done {
+			if err == iterator.Done {
 				break
 			}
 			if err != nil {
