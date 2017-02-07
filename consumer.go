@@ -8,7 +8,7 @@ type Consumer interface {
 	Consume() (chan Message, error)
 
 	// Signals the backend to remove this consumer
-	Remove()
+	Remove() error
 }
 
 // Represents a message

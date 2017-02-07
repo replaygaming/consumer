@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 // Google PubSub consumer and message implementation
@@ -17,8 +18,9 @@ type googlePubSubConsumer struct {
 }
 
 // Delegate to pubsub's Remove
-func (c *googlePubSubConsumer) Remove() {
-	c.Subscription.Delete(context.Background())
+func (c *googlePubSubConsumer) Remove() error {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return c.Subscription.Delete(ctx)
 }
 
 type googlePubSubMessage struct {
