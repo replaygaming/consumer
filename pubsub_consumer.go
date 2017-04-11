@@ -32,9 +32,13 @@ func (m *googlePubSubMessage) Data() []byte {
 	return m.OriginalMessage.Data
 }
 
-// Delegate to pubsub message's Done
+// Delegate to pubsub message's Ack/Nack
 func (m *googlePubSubMessage) Done(ack bool) {
-	m.OriginalMessage.Done(ack)
+	if ack == true {
+		m.OriginalMessage.Ack()
+	} else {
+		m.OriginalMessage.Nack()
+	}
 }
 
 var defaultProjectId = "emulator-project-id"
