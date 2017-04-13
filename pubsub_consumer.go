@@ -82,6 +82,7 @@ func newPubSubClient() (*pubsub.Client, error) {
 // Creates a new consumer
 func NewConsumer(topicName string, subscriptionName string) Consumer {
 	pubsubClient, err := newPubSubClient()
+
 	if err != nil {
 		log.Fatalf("Could not create PubSub client: %v", err)
 	}
@@ -96,8 +97,11 @@ func NewConsumer(topicName string, subscriptionName string) Consumer {
 func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 	var topic *pubsub.Topic
 	topic = pubsubClient.Topic(topicName)
-	topicExists, _ := topic.Exists(context.Background())
+	topicExists, err := topic.Exists(context.Background())
 
+	if err != nil {
+		log.Fatalf("PubSub topic does not exist: %v", err)
+	}
 	if !topicExists {
 		new_topic, err := pubsubClient.CreateTopic(context.Background(), topicName)
 		if err != nil {
@@ -113,8 +117,11 @@ func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscriptionName string) *pubsub.Subscription {
 	var subscription *pubsub.Subscription
 	subscription = pubsubClient.Subscription(subscriptionName)
-	subscriptionExists, _ := subscription.Exists(context.Background())
+	subscriptionExists, err := subscription.Exists(context.Background())
 
+	if err != nil {
+		log.Fatalf("PubSub subscription does not exist: %v", err)
+	}
 	if !subscriptionExists {
 		new_subscription, err := pubsubClient.CreateSubscription(context.Background(), subscriptionName, topic, 0, nil)
 		if err != nil {
@@ -132,7 +139,7 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	channel := make(chan Message)
 
 	go func() {
-		cctx,_ := context.WithCancel(context.Background())
+		cctx, cancel := context.WithCancel(context.Background())
 
 		err := consumer.Subscription.Receive(cctx,
 			func(ctx context.Context, msg *pubsub.Message) {
@@ -145,9 +152,18 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 			})
 
 		if err != nil {
+			cancel()
 			log.Fatalf("Could not receive message from subscription: %v", err)
 		}
 	}()
 
 	return channel, nil
+}
+
+func (consumer *googlePubSubConsumer) Alive() bool {
+	ok, err := consumer.Subscription.Exists(context.Background())
+	if err != nil || !ok {
+		return false
+	}
+	return true
 }
