@@ -129,21 +129,24 @@ func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscr
 func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	var mu sync.Mutex
 	channel := make(chan Message)
-	cctx, _ := context.WithCancel(context.Background())
 
-	err := consumer.Subscription.Receive(cctx,
-		func(ctx context.Context, msg *pubsub.Message) {
-			mu.Lock()
-			defer mu.Unlock()
+	go func() {
+		cctx,_ := context.WithCancel(context.Background())
 
-			wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
-			channel <- wrappedMsg
-			msg.Ack()
-		})
+		err := consumer.Subscription.Receive(cctx,
+			func(ctx context.Context, msg *pubsub.Message) {
+				mu.Lock()
+				defer mu.Unlock()
 
-	if err != nil {
-		log.Fatalf("Could not receive message from subscription: %v", err)
-	}
+				wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
+				channel <- wrappedMsg
+				msg.Ack()
+			})
+
+		if err != nil {
+			log.Fatalf("Could not receive message from subscription: %v", err)
+		}
+	}()
 
 	return channel, nil
 }
