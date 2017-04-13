@@ -1,15 +1,16 @@
 package consumer
 
 import (
-	"cloud.google.com/go/pubsub"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
+	"sync"
+
+	"cloud.google.com/go/pubsub"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
 
 // Google PubSub consumer and message implementation
