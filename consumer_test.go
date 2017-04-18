@@ -75,18 +75,6 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-func TestAlive(t *testing.T) {
-	pubsubClient, _ := pubsub.NewClient(context.Background(), "emulator-project-id")
-	subscription := pubsubClient.Subscription("test-subscription")
-
-	c := NewConsumer("test-topic", "test-subscription")
-	c.Remove()
-
-	if !c.Alive() {
-		t.Error("Expected consumer to not be alive")
-	}
-}
-
 func inArray(msg []byte, array [][]byte) bool {
 	for _, item := range array {
 		if reflect.DeepEqual(msg, item) {

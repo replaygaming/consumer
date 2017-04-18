@@ -154,11 +154,3 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 
 	return channel, nil
 }
-
-func (consumer *googlePubSubConsumer) Alive() bool {
-	ok, err := consumer.Subscription.Exists(context.Background())
-	if err != nil || !ok {
-		return false
-	}
-	return true
-}

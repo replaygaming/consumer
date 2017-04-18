@@ -9,9 +9,6 @@ type Consumer interface {
 
 	// Signals the backend to remove this consumer
 	Remove() error
-
-	// Checks if the PubSub consumer is still alive or not
-	Alive() bool
 }
 
 // Represents a message
