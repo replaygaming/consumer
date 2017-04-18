@@ -96,14 +96,15 @@ func NewConsumer(topicName string, subscriptionName string) Consumer {
 // Finds or creates a topic
 func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 	var topic *pubsub.Topic
+	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	topic = pubsubClient.Topic(topicName)
-	topicExists, err := topic.Exists(context.Background())
+	topicExists, err := topic.Exists(ctx)
 
 	if err != nil {
-		log.Fatalf("PubSub topic does not exist: %v", err)
+		log.Fatalf("Could not check if topic exists: %v", err)
 	}
 	if !topicExists {
-		new_topic, err := pubsubClient.CreateTopic(context.Background(), topicName)
+		new_topic, err := pubsubClient.CreateTopic(ctx, topicName)
 		if err != nil {
 			log.Fatalf("Could not create PubSub topic: %v", err)
 		}
@@ -116,14 +117,15 @@ func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 // Finds or creates a subscription
 func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscriptionName string) *pubsub.Subscription {
 	var subscription *pubsub.Subscription
+	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	subscription = pubsubClient.Subscription(subscriptionName)
-	subscriptionExists, err := subscription.Exists(context.Background())
+	subscriptionExists, err := subscription.Exists(ctx)
 
 	if err != nil {
-		log.Fatalf("PubSub subscription does not exist: %v", err)
+		log.Fatalf("Could not check if subscription exists: %v", err)
 	}
 	if !subscriptionExists {
-		new_subscription, err := pubsubClient.CreateSubscription(context.Background(), subscriptionName, topic, 0, nil)
+		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, topic, 0, nil)
 		if err != nil {
 			log.Fatalf("Could not create PubSub subscription: %v", err)
 		}
