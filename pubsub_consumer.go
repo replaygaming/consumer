@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"time"
-	"sync"
 
 	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
@@ -137,7 +136,6 @@ func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscr
 
 // Creates a channel that pulls messages from the subscription
 func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
-	var mu sync.Mutex
 	channel := make(chan Message)
 
 	go func() {
@@ -145,9 +143,6 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 
 		err := consumer.Subscription.Receive(cctx,
 			func(ctx context.Context, msg *pubsub.Message) {
-				mu.Lock()
-				defer mu.Unlock()
-
 				wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
 				channel <- wrappedMsg
 				msg.Ack()
