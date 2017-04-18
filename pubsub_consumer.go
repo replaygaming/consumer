@@ -139,7 +139,7 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	channel := make(chan Message)
 
 	go func() {
-		cctx, cancel := context.WithCancel(context.Background())
+		cctx, _ := context.WithCancel(context.Background())
 
 		err := consumer.Subscription.Receive(cctx,
 			func(ctx context.Context, msg *pubsub.Message) {
@@ -149,7 +149,6 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 			})
 
 		if err != nil {
-			cancel()
 			log.Fatalf("Could not receive message from subscription: %v", err)
 		}
 	}()
