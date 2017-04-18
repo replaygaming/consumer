@@ -145,7 +145,6 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 			func(ctx context.Context, msg *pubsub.Message) {
 				wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
 				channel <- wrappedMsg
-				msg.Ack()
 			})
 
 		if err != nil {
