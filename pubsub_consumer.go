@@ -12,6 +12,8 @@ import (
 	"google.golang.org/api/option"
 )
 
+const ContextDuration time.Duration = 30*time.Second
+
 // Google PubSub consumer and message implementation
 type googlePubSubConsumer struct {
 	Subscription *pubsub.Subscription
@@ -95,7 +97,7 @@ func NewConsumer(topicName string, subscriptionName string) Consumer {
 // Finds or creates a topic
 func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 	var topic *pubsub.Topic
-	ctx, _ := context.WithTimeout(context.Background(), 30 * time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), ContextDuration)
 	topic = pubsubClient.Topic(topicName)
 	topicExists, err := topic.Exists(ctx)
 
@@ -116,7 +118,7 @@ func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 // Finds or creates a subscription
 func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscriptionName string) *pubsub.Subscription {
 	var subscription *pubsub.Subscription
-	ctx, _ := context.WithTimeout(context.Background(), 30 * time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), ContextDuration)
 	subscription = pubsubClient.Subscription(subscriptionName)
 	subscriptionExists, err := subscription.Exists(ctx)
 
@@ -139,7 +141,7 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	channel := make(chan Message)
 
 	go func() {
-		cctx, _ := context.WithTimeout(context.Background(), 30 * time.Second)
+		cctx, _ := context.WithTimeout(context.Background(), ContextDuration)
 
 		err := consumer.Subscription.Receive(cctx,
 			func(ctx context.Context, msg *pubsub.Message) {
