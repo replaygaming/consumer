@@ -1,16 +1,18 @@
 package consumer
 
 import (
-	"cloud.google.com/go/pubsub"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
+
+	"cloud.google.com/go/pubsub"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
+
+const ContextDuration time.Duration = 30*time.Second
 
 // Google PubSub consumer and message implementation
 type googlePubSubConsumer struct {
@@ -32,9 +34,13 @@ func (m *googlePubSubMessage) Data() []byte {
 	return m.OriginalMessage.Data
 }
 
-// Delegate to pubsub message's Done
+// Delegate to pubsub message's Ack/Nack
 func (m *googlePubSubMessage) Done(ack bool) {
-	m.OriginalMessage.Done(ack)
+	if ack == true {
+		m.OriginalMessage.Ack()
+	} else {
+		m.OriginalMessage.Nack()
+	}
 }
 
 var defaultProjectId = "emulator-project-id"
@@ -77,6 +83,7 @@ func newPubSubClient() (*pubsub.Client, error) {
 // Creates a new consumer
 func NewConsumer(topicName string, subscriptionName string) Consumer {
 	pubsubClient, err := newPubSubClient()
+
 	if err != nil {
 		log.Fatalf("Could not create PubSub client: %v", err)
 	}
@@ -90,11 +97,15 @@ func NewConsumer(topicName string, subscriptionName string) Consumer {
 // Finds or creates a topic
 func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 	var topic *pubsub.Topic
+	ctx, _ := context.WithTimeout(context.Background(), ContextDuration)
 	topic = pubsubClient.Topic(topicName)
-	topicExists, _ := topic.Exists(context.Background())
+	topicExists, err := topic.Exists(ctx)
 
+	if err != nil {
+		log.Fatalf("Could not check if topic exists: %v", err)
+	}
 	if !topicExists {
-		new_topic, err := pubsubClient.CreateTopic(context.Background(), topicName)
+		new_topic, err := pubsubClient.CreateTopic(ctx, topicName)
 		if err != nil {
 			log.Fatalf("Could not create PubSub topic: %v", err)
 		}
@@ -107,11 +118,15 @@ func ensureTopic(pubsubClient *pubsub.Client, topicName string) *pubsub.Topic {
 // Finds or creates a subscription
 func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscriptionName string) *pubsub.Subscription {
 	var subscription *pubsub.Subscription
+	ctx, _ := context.WithTimeout(context.Background(), ContextDuration)
 	subscription = pubsubClient.Subscription(subscriptionName)
-	subscriptionExists, _ := subscription.Exists(context.Background())
+	subscriptionExists, err := subscription.Exists(ctx)
 
+	if err != nil {
+		log.Fatalf("Could not check if subscription exists: %v", err)
+	}
 	if !subscriptionExists {
-		new_subscription, err := pubsubClient.CreateSubscription(context.Background(), subscriptionName, topic, 0, nil)
+		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, topic, 0, nil)
 		if err != nil {
 			log.Fatalf("Could not create PubSub subscription: %v", err)
 		}
@@ -126,26 +141,16 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	channel := make(chan Message)
 
 	go func() {
-		it, err := consumer.Subscription.Pull(context.Background())
+		cctx, _ := context.WithTimeout(context.Background(), ContextDuration)
+
+		err := consumer.Subscription.Receive(cctx,
+			func(ctx context.Context, msg *pubsub.Message) {
+				wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
+				channel <- wrappedMsg
+			})
+
 		if err != nil {
-			log.Printf("Could not pull message from subscription: %v", err)
-			return
-		}
-		defer it.Stop()
-
-		for {
-			msg, err := it.Next()
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				log.Printf("Error consuming messages: %v", err)
-				break
-			}
-
-			wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
-
-			channel <- wrappedMsg
+			log.Fatalf("Could not receive message from subscription: %v", err)
 		}
 	}()
 
