@@ -1,12 +1,11 @@
-hash: b2017b9cfff7354d872b7ab837aa3f6d15cea55a32ceb28cf7375ade287d9097
-updated: 2017-04-27T18:02:15.584894324+05:30
+hash: ae30c2912b3e69a4136bd814bd81a1091f851ad91fa70a95ee5b42f0c7271243
+updated: 2017-04-27T19:02:32.158301381+05:30
 imports:
 - name: cloud.google.com/go
-  version: 2e6a95edb1071d750f6d7db777bf66cd2997af6c
+  version: ba86ddfb382944d62e1ddfe1c479a9b8421d2f51
   subpackages:
   - compute/metadata
   - iam
-  - internal
   - internal/version
   - pubsub
   - pubsub/apiv1
