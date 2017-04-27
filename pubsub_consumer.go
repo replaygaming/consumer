@@ -141,9 +141,7 @@ func (consumer *googlePubSubConsumer) Consume() (chan Message, error) {
 	channel := make(chan Message)
 
 	go func() {
-		cctx, _ := context.WithTimeout(context.Background(), ContextDuration)
-
-		err := consumer.Subscription.Receive(cctx,
+		err := consumer.Subscription.Receive(context.Background(),
 			func(ctx context.Context, msg *pubsub.Message) {
 				wrappedMsg := &googlePubSubMessage{OriginalMessage: msg}
 				channel <- wrappedMsg
