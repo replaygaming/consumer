@@ -126,7 +126,7 @@ func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscr
 		log.Fatalf("Could not check if subscription exists: %v", err)
 	}
 	if !subscriptionExists {
-		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, topic, 0, nil)
+		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{Topic: topic})
 		if err != nil {
 			log.Fatalf("Could not create PubSub subscription: %v", err)
 		}
