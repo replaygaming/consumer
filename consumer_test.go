@@ -6,7 +6,15 @@ import (
 	"reflect"
 	"testing"
 	"time"
+	"os"
 )
+
+var _ = func() bool {
+	if os.Getenv("PUBSUB_EMULATOR_HOST") == "" {
+		os.Setenv("PUBSUB_EMULATOR_HOST", "pubsub-emulator:8538")
+	}
+	return true
+}()
 
 func TestConsume(t *testing.T) {
 	pubsubClient, _ := pubsub.NewClient(context.Background(), "emulator-project-id")
