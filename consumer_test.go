@@ -1,12 +1,13 @@
 package consumer
 
 import (
-	"cloud.google.com/go/pubsub"
-	"golang.org/x/net/context"
+	"os"
 	"reflect"
 	"testing"
 	"time"
-	"os"
+
+	"cloud.google.com/go/pubsub"
+	"golang.org/x/net/context"
 )
 
 var _ = func() bool {

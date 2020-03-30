@@ -1,18 +1,16 @@
 package consumer
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
 
 	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
-const ContextDuration time.Duration = 30*time.Second
+const ContextDuration time.Duration = 30 * time.Second
 
 // Google PubSub consumer and message implementation
 type googlePubSubConsumer struct {
@@ -56,22 +54,9 @@ func newPubSubClient() (*pubsub.Client, error) {
 
 	// Create a new client with token
 	keyfilePath := os.Getenv("PUBSUB_KEYFILE")
-	if keyfilePath != "" {
-		jsonKey, err := ioutil.ReadFile(keyfilePath)
-		if err != nil {
-			return nil, err
-		}
-		conf, err := google.JWTConfigFromJSON(
-			jsonKey,
-			pubsub.ScopeCloudPlatform,
-			pubsub.ScopePubSub,
-		)
 
-		if err != nil {
-			return nil, err
-		}
-		tokenSource := conf.TokenSource(ctx)
-		client, err = pubsub.NewClient(ctx, projectId, option.WithTokenSource(tokenSource))
+	if keyfilePath != "" {
+		client, err = pubsub.NewClient(ctx, projectId, option.WithCredentialsFile(keyfilePath))
 	} else {
 		// Create client without token
 		client, err = pubsub.NewClient(ctx, projectId)
@@ -126,7 +111,7 @@ func ensureSubscription(pubsubClient *pubsub.Client, topic *pubsub.Topic, subscr
 		log.Fatalf("Could not check if subscription exists: %v", err)
 	}
 	if !subscriptionExists {
-		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, topic, 0, nil)
+		new_subscription, err := pubsubClient.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{Topic: topic})
 		if err != nil {
 			log.Fatalf("Could not create PubSub subscription: %v", err)
 		}
