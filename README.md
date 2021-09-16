@@ -1,3 +1,7 @@
+# RIP
+
+Was used by old evensource modules, which were suporessed by https://github.com/replaygaming/sse
+
 # Consumer Go package
 
 This wraps the message consumer logic into a small package.
